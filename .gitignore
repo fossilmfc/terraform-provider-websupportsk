@@ -1,0 +1,7 @@
+.idea
+*.dll
+*.exe
+.DS_Store
+bin/
+terraform.tfplan
+terraform.tfstate:wq
