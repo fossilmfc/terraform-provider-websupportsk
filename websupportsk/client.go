@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -21,12 +22,13 @@ const (
 )
 
 type Client struct {
-	baseURL    string
-	userAgent  string
-	apiKey     string
-	secret     string
-	httpClient *http.Client
-	headers    map[string]string
+	baseURL     string
+	userAgent   string
+	apiKey      string
+	secret      string
+	httpClient  *http.Client
+	headers     map[string]string
+	requestLock sync.Mutex
 
 	Dns DnsClient
 }
@@ -97,7 +99,9 @@ func (c *Client) Do(req *http.Request, output interface{}) (*http.Response, erro
 			req.Body = ioutil.NopCloser(bytes.NewReader(body))
 		}
 
+		c.requestLock.Lock()
 		resp, err := c.httpClient.Do(req)
+		c.requestLock.Unlock()
 		if err != nil {
 			return nil, err
 		}
