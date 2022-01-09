@@ -45,7 +45,9 @@ func resourceDnsRecord() *schema.Resource {
 		ReadContext:   resourceDnsRecordRead,
 		UpdateContext: resourceDnsRecordUpdate,
 		DeleteContext: resourceDnsRecordDelete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceDnsRecordImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"zone_name": {
 				Type:     schema.TypeString,
@@ -141,6 +143,35 @@ func resourceDnsRecordDelete(ctx context.Context, data *schema.ResourceData, met
 	}
 
 	return nil
+}
+
+func resourceDnsRecordImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*Client)
+
+	// split the id so we can lookup
+	idAttr := strings.SplitN(d.Id(), "/", 2)
+	var zoneName string
+	var recordId string
+	if len(idAttr) == 2 {
+		zoneName = idAttr[0]
+		recordId = idAttr[1]
+	} else {
+		return nil, fmt.Errorf("invalid id %q specified, should be in format \"zoneName/recordId\" for import", d.Id())
+	}
+
+	record, err := client.Dns.ReadDnsRecord(ctx, zoneName, recordId)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("[INFO] Found record: %s", record.Name)
+
+	d.Set("zone_name", zoneName)
+	d.SetId(recordId)
+
+	resourceDnsRecordRead(ctx, d, meta)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func (client *DnsClient) CreateDnsRecord(ctx context.Context, body DnsRecord) (DnsRecord, error) {
