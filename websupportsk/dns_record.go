@@ -5,10 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"strconv"
 )
 
 type DnsClient struct {
@@ -22,16 +25,16 @@ type DnsZone struct {
 }
 
 type DnsRecord struct {
-	Id      int     `json:"id"`
-	Type    string  `json:"type"`
-	Name    string  `json:"name"`
-	Content string  `json:"content"`
-	Prio    int     `json:"prio"`
-	Port    int     `json:"port"`
-	Weight  int     `json:"weight"`
-	Ttl     int     `json:"ttl"`
-	Note    string  `json:"note"`
-	Zone    DnsZone `json:"zone"`
+	Id      int         `json:"id"`
+	Type    string      `json:"type"`
+	Name    string      `json:"name"`
+	Content string      `json:"content"`
+	Prio    json.Number `json:"prio,omitempty"`
+	Port    json.Number `json:"port,omitempty"`
+	Weight  json.Number `json:"weight,omitempty"`
+	Ttl     int         `json:"ttl"`
+	Note    string      `json:"note"`
+	Zone    DnsZone     `json:"zone"`
 }
 
 type DnsRecordStatusWrapper struct {
@@ -244,12 +247,16 @@ func GetDnsRecord(data *schema.ResourceData) DnsRecord {
 
 	switch body.Type {
 	case "SRV":
-		body.Prio = data.Get("prio").(int)
-		body.Port = data.Get("port").(int)
-		body.Weight = data.Get("weight").(int)
+		body.Prio = convertIntToJSONNumber(data.Get("prio").(int))
+		body.Port = convertIntToJSONNumber(data.Get("port").(int))
+		body.Weight = convertIntToJSONNumber(data.Get("weight").(int))
 	case "MX":
-		body.Prio = data.Get("prio").(int)
+		body.Prio = convertIntToJSONNumber(data.Get("prio").(int))
 	}
 
 	return body
+}
+
+func convertIntToJSONNumber(i int) json.Number {
+	return json.Number(strconv.Itoa(i))
 }
