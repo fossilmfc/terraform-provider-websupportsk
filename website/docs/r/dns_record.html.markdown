@@ -41,8 +41,8 @@ The following arguments are supported:
 * `ttl` - (Optional) The time to live (TTL) of the record.
 
 * `prio` - (Required FOR type("MX", "SRV") | else IGNORED) Priority value of the record.
-  
-* `port` - (Required FOR type("SRV") | else IGNORED) Port value of the record. 
+
+* `port` - (Required FOR type("SRV") | else IGNORED) Port value of the record.
 
 * `weight` - (Required FOR type("SRV") | else IGNORED) Weight value of the record.
 
@@ -62,3 +62,16 @@ The following attributes are exported:
 * `prio` - See Argument Reference above.
 * `weight` - See Argument Reference above.
 * `note` - See Argument Reference above.
+
+## Import
+
+Records can be imported using a composite ID formed of zone name and record ID, e.g.
+
+```
+$ terraform import websupportsk_dns_record.example_record websupport.sk/123
+```
+
+where:
+
+* `websupport.sk` - The name of the zone
+* `123` - record ID as returned by [API](https://rest.websupport.sk/docs/v1.zone#records)
